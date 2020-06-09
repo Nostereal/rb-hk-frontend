@@ -14,8 +14,7 @@ interface Props extends TariffPlan {}
 
 const TariffsFormPage: React.FC = () => {
     const history = useHistory();
-    const onSubmit: React.FormEventHandler = async e => {
-        e.preventDefault();
+    const onFinish = async () => {
         const { uuid } = await createTariffPlan({ title });
         await bindStrategiesWithTariff(selectedStrategies, uuid);
         history.goBack();
@@ -55,7 +54,7 @@ const TariffsFormPage: React.FC = () => {
                 </PageHeader>
 
                 <div className="">
-                    <Form onSubmit={onSubmit} style={{ marginTop: 60 }} {...formItemLayout}>
+                    <Form onFinish={onFinish} style={{ marginTop: 60 }} {...formItemLayout}>
                         <Form.Item required label={'Название'}>
                             <Input
                                 placeholder={'Путешественник'}
@@ -72,7 +71,7 @@ const TariffsFormPage: React.FC = () => {
                                 onChange={(s: string[]) => setSelectedStrategies(s)}
                             >
                                 {strategies.map(s => (
-                                    <Select.Option value={s.uuid} key={s.uuid}>
+                                    <Select.Option value={s.uuid!} key={s.uuid}>
                                         {s.title}
                                     </Select.Option>
                                 ))}

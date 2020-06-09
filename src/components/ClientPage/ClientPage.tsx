@@ -1,4 +1,4 @@
-import { Avatar, Button, Divider, Icon, Result, Select, Spin, Table, Tag } from 'antd';
+import { Avatar, Button, Divider, Result, Select, Spin, Table, Tag } from 'antd';
 import { ColumnProps } from 'antd/lib/table';
 import Title from 'antd/lib/typography/Title';
 import { block } from 'bem-cn';
@@ -17,6 +17,7 @@ import { Client } from '../../models/client';
 import { StrategyType } from '../../models/strategy';
 import { TariffPlan } from '../../models/tariffPlan';
 import './ClientPage.scss';
+import { ScheduleOutlined, ThunderboltOutlined, UserOutlined } from '@ant-design/icons';
 const b = block('ClientPage');
 
 const ClientPage: React.FC = () => {
@@ -87,16 +88,12 @@ const ClientPage: React.FC = () => {
         {
             title: 'Тип',
             width: 70,
-            render: (_, { strategy }) => (
-                <Icon
-                    style={{ width: 20, marginRight: 25 }}
-                    type={
-                        strategy && strategy.type === StrategyType.AGGREGATE_DATE
-                            ? 'schedule'
-                            : 'thunderbolt'
-                    }
-                />
-            ),
+            render: (_, { strategy }) => {
+                const style = { width: 20, marginRight: 25 };
+                return strategy && strategy.type === StrategyType.AGGREGATE_DATE
+                    ? <ScheduleOutlined style={style} /> 
+                    : <ThunderboltOutlined style={style} />;
+            }
         },
         {
             title: 'Количество бонусов',
@@ -129,7 +126,7 @@ const ClientPage: React.FC = () => {
             <div className="container">
                 <div className={b('head')}>
                     <div className={b('user-name')}>
-                        <Avatar icon="user" size="large" />
+                        <Avatar icon={<UserOutlined />} size="large" />
                         <Title style={{ margin: 0, padding: 0, marginLeft: 10 }} level={3}>
                             {upperFirst(client.firstName)} {upperFirst(client.lastName)}
                         </Title>

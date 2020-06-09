@@ -18,6 +18,16 @@ export const createStrategy = async (strategyCreation: Strategy) =>
         settings: JSON.stringify(strategyCreation.settings),
     });
 
+export const fetchStrategy = async (id: string) => 
+    request.get<Strategy>(`/strategies/${id}`).then(({ data }) => {
+        return {
+            uuid: data.uuid,
+            type: data.type,
+            title: data.title,
+            settings: JSON.parse(data.settings.toString()),
+        }
+    });
+
 export const fetchStrategies = async () =>
     request
         .get<Strategy[]>('/strategies')

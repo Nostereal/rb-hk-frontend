@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Divider } from 'antd';
+import { Button } from 'antd';
 import { Link } from 'react-router-dom';
 import './Header.scss';
 import Title from 'antd/lib/typography/Title';

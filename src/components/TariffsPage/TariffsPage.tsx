@@ -2,9 +2,10 @@ import * as React from 'react';
 import { block } from 'bem-cn';
 import Title from 'antd/lib/typography/Title';
 import { TariffPlan } from '../../models/tariffPlan';
-import { Table, Tag, Button, Icon } from 'antd';
+import { Table, Tag, Button } from 'antd';
 import { ColumnProps } from 'antd/lib/table';
 import { fetchTariffs } from '../../api/routes';
+import { BuildOutlined } from '@ant-design/icons';
 
 const b = block('TariffsPage');
 
@@ -41,7 +42,7 @@ const TariffsPage: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Title level={2}>Тарифы</Title>
                     <Button href={'tariffs/create'}>
-                        <Icon type="build" /> Создать тариф
+                        <BuildOutlined /> Создать тариф
                     </Button>
                 </div>
                 <div style={{ marginTop: 30 }}>

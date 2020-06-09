@@ -4,8 +4,9 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import ClientPage from '../ClientPage/ClientPage';
 import ClientsListPage from '../ClientsListPage/ClientsListPage';
 import Header from '../Header/Header';
-import StrategiesCreatePage from '../StrategiesCreatePage/StrategiesCreatePage';
+import StrategiesCreatePage from '../StrategyCreatePage/StrategiesCreatePage';
 import StrategiesListPage from '../StrategiesListPage/StrategiesListPage';
+import StrategyPage from '../StrategyPage/StrategyPage';
 import TariffsFormPage from '../TariffsCreatePage/TariffsFormPage';
 import TariffsPage from '../TariffsPage/TariffsPage';
 import './App.scss';
@@ -33,6 +34,7 @@ const App: React.FC = () => {
                 <Switch>
                     <Route exact path="/" component={ClientsListPage} />
                     <Route exact path="/strategies" component={StrategiesListPage} />
+                    <Route exact path="/strategies/:id" component={StrategyPage} />
                     <Route path="/strategies/create" component={StrategiesCreatePage} />
                     <Route exact path="/client/:id" component={ClientPage} />
                     <Route exact path="/tariffs" component={TariffsPage} />

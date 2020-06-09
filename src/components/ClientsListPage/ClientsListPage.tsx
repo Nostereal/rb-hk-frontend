@@ -68,7 +68,7 @@ const ClientsListPage: React.FC = () => {
                 </div>
                 <Table
                     style={{ marginTop: '5%' }}
-                    onRowClick={({ uuid }) => history.push(`/client/${uuid}`)}
+                    onRow={({ uuid }) => ({ onClick: () => history.push(`/client/${uuid}`)})}
                     dataSource={tableSource}
                     columns={columns}
                     loading={loading}

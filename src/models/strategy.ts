@@ -7,7 +7,7 @@ export interface Strategy {
 
 export interface InstantStrategy {
     intervals: IntervalSettings[];
-    mcc_list: string[];
+    mcc_list?: number[];
     min_bonus: number;
     max_bonus: number;
 }
@@ -26,11 +26,11 @@ export interface IntervalSettings {
 
 export interface AggregateStrategy {
     aggregate_time_settings: AggregateTimeSettings;
-    mcc_list: string[];
+    mcc_list: number[];
     min_bonus: number;
     max_bonus: number;
     aggregate_function: AggregateFunction;
-    intervals: IntervalSettings;
+    intervals: IntervalSettings[];
 }
 
 export enum AggregateFunction {

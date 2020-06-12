@@ -114,6 +114,7 @@ const InstantStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) => {
         };
         return (
             <Interval
+                key={interval.key}
                 id={interval.key}
                 settings={strategy?.intervals[i]}
                 minFrom={prevInterval && prevInterval.to ? prevInterval.to : 0}
@@ -127,7 +128,6 @@ const InstantStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) => {
     const setIntervalValues = (k: number, values: Partial<AmountInterval>) => {
         const thatInterval = intervals.filter(({ key }) => key === k)[0];
         const thisIndex = intervals.indexOf(thatInterval);
-        console.log('setIntVal')
         setIntervals(all => [
             ...all.slice(0, thisIndex),
             { ...thatInterval, ...values },
@@ -195,11 +195,12 @@ interface IntervalProps {
     onRemove: () => void;
     minFrom: number;
     areFieldsDisabled: boolean
+    setIntervalValues: (values: Partial<AmountInterval>) => void
 }
 
-const Interval: React.FC<IntervalProps> = ({ id, settings, onRemove, minFrom, areFieldsDisabled }) => {
+const Interval: React.FC<IntervalProps> = ({ id, settings, onRemove, minFrom, setIntervalValues, areFieldsDisabled }) => {
     const [ratioMode, setRatioMode] = React.useState(!!settings?.ratio);
-    const [toCurrent, setToCurrent] = React.useState(minFrom + 1000);
+    const [toCurrent, setToCurrent] = React.useState(minFrom + 500);
     
 
     return (
@@ -219,7 +220,7 @@ const Interval: React.FC<IntervalProps> = ({ id, settings, onRemove, minFrom, ar
                     <InputNumber
                         min={minFrom}
                         disabled={areFieldsDisabled}
-                        value={settings?.from}
+                        defaultValue={settings?.from ? settings.from : minFrom}
                         onChange={v => {
                             setToCurrent(v as number);
                             setIntervalValues({ from: v as number });
@@ -232,12 +233,12 @@ const Interval: React.FC<IntervalProps> = ({ id, settings, onRemove, minFrom, ar
                     <InputNumber
                         min={toCurrent}
                         disabled={areFieldsDisabled}
-                        value={settings?.to}
+                        defaultValue={settings?.to}
                         onChange={v => setIntervalValues({ to: v as number })}
                         placeholder={'Max'}
                     />
                 </Form.Item>
-                {!areFieldsDisabled && <Form.Item>
+                {(!areFieldsDisabled && id > 0) && <Form.Item>
                     <span onClick={onRemove} style={{ cursor: 'pointer' }}>
                         <DeleteOutlined/>
                     </span>
@@ -246,13 +247,13 @@ const Interval: React.FC<IntervalProps> = ({ id, settings, onRemove, minFrom, ar
             <Form.Item label={ratioMode ? 'Бонусы в процентах' : 'Фиксированное количество'}>
                 {ratioMode ? (
                     <Slider
-                        value={settings?.ratio && settings.ratio * 100}
+                        defaultValue={settings?.ratio && settings.ratio * 100}
                         disabled={areFieldsDisabled}
                         onChange={v => setIntervalValues({ ratio: Number(v) / 100 })}
                     />
                 ) : (
                     <InputNumber
-                        value={settings?.amount}
+                        defaultValue={settings?.amount}
                         disabled={areFieldsDisabled}
                         onChange={v => setIntervalValues({ amount: v as number })}
                         placeholder={'42'}

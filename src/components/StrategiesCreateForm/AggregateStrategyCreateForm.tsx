@@ -126,10 +126,10 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) =>
         };
         return (
             <Interval
+                key={interval.key}
                 areFieldsDisabled={areFieldsDisabled}
-                setIntervalValues={(values: Partial<AmountInterval>) =>
-                    setIntervalValues(interval.key, values)
-                }
+                setIntervalValues={(values: Partial<AmountInterval>) => setIntervalValues(interval.key, values)}
+                settings={interval}
                 minFrom={prevInterval && prevInterval.to ? prevInterval.to : 0}
                 onRemove={onRemove}
                 id={interval.key}
@@ -222,12 +222,14 @@ interface IntervalProps {
     areFieldsDisabled: boolean
     onRemove: () => void;
     minFrom: number;
+    settings?: IntervalSettings
     setIntervalValues: (values: Partial<AmountInterval>) => void;
 }
 
-const Interval: React.FC<IntervalProps> = ({ id, onRemove, setIntervalValues, minFrom, areFieldsDisabled }) => {
-    const [ratioMode, setRatioMode] = React.useState(true);
-    const [toCurrent, setToCurrent] = React.useState(minFrom + 1000);
+const Interval: React.FC<IntervalProps> = ({ id, onRemove, setIntervalValues, minFrom, areFieldsDisabled, settings }) => {
+    const [ratioMode, setRatioMode] = React.useState(!!settings?.ratio);
+    const [toCurrent, setToCurrent] = React.useState(minFrom + 500);
+
 
     return (
         <Form.Item key={id} className="inline-flex" wrapperCol={{ offset: 2 }}>
@@ -244,12 +246,12 @@ const Interval: React.FC<IntervalProps> = ({ id, onRemove, setIntervalValues, mi
 
                 <Form.Item>
                     <InputNumber
-                        disabled={areFieldsDisabled}
                         min={minFrom}
+                        disabled={areFieldsDisabled}
+                        defaultValue={settings?.from ? settings.from : minFrom}
                         onChange={v => {
-                            const numericV = v as number;
-                            setToCurrent(numericV);
-                            setIntervalValues({ from: numericV });
+                            setToCurrent(v as number);
+                            setIntervalValues({ from: v as number });
                         }}
                         placeholder={'Min'}
                     />
@@ -257,23 +259,29 @@ const Interval: React.FC<IntervalProps> = ({ id, onRemove, setIntervalValues, mi
                 <Form.Item>-</Form.Item>
                 <Form.Item>
                     <InputNumber
-                        disabled={areFieldsDisabled}
                         min={toCurrent}
+                        disabled={areFieldsDisabled}
+                        defaultValue={settings?.to}
                         onChange={v => setIntervalValues({ to: v as number })}
                         placeholder={'Max'}
                     />
                 </Form.Item>
-                <Form.Item>
+                {(!areFieldsDisabled && id > 0) && <Form.Item>
                     <span onClick={onRemove} style={{ cursor: 'pointer' }}>
-                        <DeleteOutlined disabled={areFieldsDisabled}/>
+                        <DeleteOutlined/>
                     </span>
-                </Form.Item>
+                </Form.Item>}
             </div>
             <Form.Item label={ratioMode ? 'Бонусы в процентах' : 'Фиксированное количество'}>
                 {ratioMode ? (
-                    <Slider disabled={areFieldsDisabled} onChange={v => setIntervalValues({ ratio: Number(v) / 100 })}/>
+                    <Slider
+                        defaultValue={settings?.ratio && settings.ratio * 100}
+                        disabled={areFieldsDisabled}
+                        onChange={v => setIntervalValues({ ratio: Number(v) / 100 })}
+                    />
                 ) : (
                     <InputNumber
+                        defaultValue={settings?.amount}
                         disabled={areFieldsDisabled}
                         onChange={v => setIntervalValues({ amount: v as number })}
                         placeholder={'42'}

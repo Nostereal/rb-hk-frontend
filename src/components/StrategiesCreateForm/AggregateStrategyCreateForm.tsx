@@ -87,25 +87,26 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) =>
     };
 
     const addMcc = () => {
-        const mcc = form.getFieldValue('mсс') as any;
+        const mcc = form.getFieldValue('mсс');
+        if (mccList.includes(mcc)) return
+
         form.resetFields(['mcc']);
         if (/\d{4}/.test(mcc)) setMccList(prev => [...prev, mcc]);
     };
 
     const renderMCC = () => {
-        return (<>
-                {!areFieldsDisabled && <>
+        return (
+            <>
+                {!areFieldsDisabled &&
+                <Form.Item name="mcc" rules={[{ pattern: /\d{4}/g, message: 'MCC код — это 4 цифры' }]}>
                     <Input
                         addonAfter={
-                            <span onClick={addMcc} style={{ cursor: 'pointer' }}>
-                                <PlusOutlined/>
-                            </span>
+                            <PlusOutlined onClick={addMcc} style={{ cursor: 'pointer' }}/>
                         }
                         placeholder={'3522'}
                         style={{ maxWidth: 100 }}
                     />
-                    <br/>
-                </>}
+                </Form.Item>}
                 {mccList.map(item => (
                     <Tag key={item} closable={!areFieldsDisabled} onClose={() => handleClose(item)}>
                         {item}

@@ -72,6 +72,8 @@ const InstantStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) => {
 
     const addMcc = () => {
         const mcc = form.getFieldValue('mcc');
+        if (mccList.includes(mcc)) return
+
         form.resetFields(['mcc']);
         if (/\d{4}/.test(mcc)) setMccList(prev => [...prev, mcc]);
     };
@@ -192,13 +194,13 @@ interface IntervalProps {
     settings?: IntervalSettings;
     onRemove: () => void;
     minFrom: number;
-    setIntervalValues: (values: Partial<AmountInterval>) => void;
     areFieldsDisabled: boolean
 }
 
-const Interval: React.FC<IntervalProps> = ({ id, settings, onRemove, setIntervalValues, minFrom, areFieldsDisabled }) => {
+const Interval: React.FC<IntervalProps> = ({ id, settings, onRemove, minFrom, areFieldsDisabled }) => {
     const [ratioMode, setRatioMode] = React.useState(!!settings?.ratio);
     const [toCurrent, setToCurrent] = React.useState(minFrom + 1000);
+    
 
     return (
         <Form.Item key={id} className="inline-flex" wrapperCol={{ offset: 2 }}>

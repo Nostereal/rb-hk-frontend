@@ -1,19 +1,25 @@
-import { Button, Form, Input, Tag, Switch, InputNumber, Slider } from 'antd';
+import { Button, Form, Input, Tag, Switch, InputNumber, Slider, Space, notification } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { block } from 'bem-cn';
 import * as React from 'react';
 import './InstantStrategyCreateForm.scss';
 import { InstantStrategy, IntervalSettings, Strategy, StrategyType } from '../../models/strategy';
 import Title from 'antd/lib/typography/Title';
-import { createStrategy } from '../../api/routes';
+import { createStrategy, deleteStrategy, updateStrategy } from '../../api/routes';
 import { useHistory } from 'react-router';
 import { Mode } from '../../constants/strategies-descriptions';
 
 const b = block('InstantStrategyCreateForm');
 
+interface InstantStrategyWithMeta extends InstantStrategy {
+    uuid?: string
+    title?: string
+}
+
 interface FormProps {
     mode: Mode
-    strategy?: InstantStrategy
+    strategy?: InstantStrategyWithMeta
+    onModeChanged?: React.Dispatch<React.SetStateAction<Mode>>
 }
 
 interface AmountInterval extends IntervalSettings {
@@ -22,26 +28,48 @@ interface AmountInterval extends IntervalSettings {
 
 let id = 0;
 
-const InstantStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) => {
+const InstantStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy, onModeChanged }) => {
     const history = useHistory();
     const [form] = Form.useForm();
+    let deleteClicks = 0;
 
     const onFinish = async (values: any) => {
-        if (mode === Mode.VIEW) return;
-        try {
-            await createStrategy({
-                type: StrategyType.INSTANT,
-                title: values.title,
-                settings: {
-                    intervals: intervals.map(i => ({ ...i, key: undefined })),
-                    mcc_list: mccList.map(i => +i), // cast string to number
-                    max_bonus: values.max,
-                    min_bonus: values.min,
-                },
-            });
-            history.push('/strategies/create/success');
-        } catch (error) {
-            history.push('/strategies/create/error');
+        if (mode === Mode.VIEW) {
+            onModeChanged!!(Mode.EDIT);
+            return;
+        } else if (mode === Mode.EDIT) {
+            try {
+                await updateStrategy({
+                    uuid: strategy!!.uuid,
+                    type: StrategyType.INSTANT,
+                    title: values.title,
+                    settings: {
+                        intervals: intervals.map(i => ({ ...i, key: undefined })),
+                        mcc_list: mccList.map(i => +i), // cast string to number
+                        min_bonus: values.min,
+                        max_bonus: values.max,
+                    },
+                });
+                history.push('/strategies/create/success');
+            } catch (error) {
+                history.push('/strategies/create/error');
+            }
+        } else if (mode === Mode.CREATE) {
+            try {
+                await createStrategy({
+                    type: StrategyType.INSTANT,
+                    title: values.title,
+                    settings: {
+                        intervals: intervals.map(i => ({ ...i, key: undefined })),
+                        mcc_list: mccList.map(i => +i), // cast string to number
+                        min_bonus: values.min,
+                        max_bonus: values.max,
+                    },
+                });
+                history.push('/strategies/create/success');
+            } catch (error) {
+                history.push('/strategies/create/error');
+            }
         }
     };
 
@@ -51,9 +79,8 @@ const InstantStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) => {
             ? strategy.intervals.map((item, ind) => ({ key: ind, ...item }))
             : [{ key: 0 }],
     );
-    const [areFieldsDisabled, setFieldsDisabled] = React.useState(mode === Mode.VIEW);
-
-    React.useEffect(() => setFieldsDisabled(mode === Mode.VIEW), [mode]);
+    const [deleteLoading, setDeleteLoading] = React.useState<boolean>(false)
+    const areFieldsDisabled = mode === Mode.VIEW
 
     const formItemLayout = {
         labelCol: {
@@ -143,21 +170,60 @@ const InstantStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) => {
         setIntervals(prev => [...prev, { from: prevInterval.to, key: ++id }]);
     };
 
+    const onDeleteStrategy = () => {
+        deleteClicks++
+        setDeleteLoading(true)
+        if (deleteClicks === 1) {
+            setTimeout(() => {
+                notification.error({
+                    message: 'Что-то пошло не так',
+                    description: React.createElement('img', {
+                        src: 'https://memepedia.ru/wp-content/uploads/2017/04/%D0%B5%D0%B1%D0%B0%D1%82%D1%8C-%D1%82%D1%8B-%D0%BB%D0%BE%D1%85-%D0%BE%D1%80%D0%B8%D0%B3%D0%B8%D0%BD%D0%B0%D0%BB.jpg',
+                        alt: 'Ты даже удалить не можешь, ничтожество',
+                        width: 280,
+                        height: 170,
+                    })
+                })
+                setDeleteLoading(false)
+            }, 700)
+        } else {
+            deleteStrategy(strategy!!.uuid!!)
+                .then(() => history.push('/strategies'))
+                .catch(() => {
+                    notification.error({
+                        message: 'Упсс...',
+                        description: 'Ты даже удалить не можешь, ничтожество',
+                    })
+                })
+                .finally(() => setDeleteLoading(false))
+        }
+    }
+
     return (
         <div className={b()}>
-            <Form name="instant-form" {...formItemLayout} onFinish={onFinish} form={form}>
+            <Form
+                form={form}
+                name="instant-form"
+                {...formItemLayout}
+                onFinish={onFinish}
+                initialValues={
+                    { from: strategy?.min_bonus,
+                        to: strategy?.max_bonus,
+                        title: strategy?.title
+                    }
+                }
+            >
                 {(!areFieldsDisabled || mccList.length !== 0) && <Form.Item label='MCC'>
                     {renderMCC()}
                 </Form.Item>}
                 {!areFieldsDisabled && <Form.Item name="title" required label="Название">
                     <Input placeholder={'Daily Ashan strategy'}/>
                 </Form.Item>}
-                {(!areFieldsDisabled ||(strategy?.min_bonus && strategy.max_bonus)) && <Form.Item label='Лимит'>
+                {(!areFieldsDisabled || (strategy?.min_bonus && strategy.max_bonus)) && <Form.Item label='Лимит'>
                     <div className="inline-flex">
                         <Form.Item name="from">
                             <InputNumber
                                 placeholder={'Min'}
-                                value={strategy?.min_bonus ? strategy.min_bonus : 0}
                                 disabled={areFieldsDisabled}
                             />
                         </Form.Item>
@@ -165,7 +231,6 @@ const InstantStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) => {
                         <Form.Item name="to">
                             <InputNumber
                                 placeholder={'Max'}
-                                value={strategy?.max_bonus ? strategy.max_bonus : 0}
                                 disabled={areFieldsDisabled}
                             />
                         </Form.Item>
@@ -176,13 +241,24 @@ const InstantStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) => {
                 </Form.Item>
                 {intervalsList}
                 <Form.Item wrapperCol={{ offset: 2 }}>
-                    <Button style={{ marginRight: 30 }} htmlType='submit' type="primary"
-                            onClick={areFieldsDisabled ? () => setFieldsDisabled(false) : undefined}>
-                        {areFieldsDisabled ? 'Редактировать' : 'Создать' /* when areFieldsDisabled is true – u r in VIEW mode, else – in EDIT mode */}
-                    </Button>
-                    {!areFieldsDisabled && <Button onClick={addInterval} type="dashed">
-                        Добивить правило <PlusOutlined/>
-                    </Button>}
+                    <Space size={'large'}>
+                        <Space size={'small'}>
+                            <Button htmlType='submit' type="primary">
+                                {mode === Mode.VIEW && 'Редактировать'}
+                                {mode === Mode.EDIT && 'Сохранить'}
+                                {mode === Mode.CREATE && 'Создать'}
+                            </Button>
+                            {!areFieldsDisabled && <Button onClick={addInterval} type="dashed">
+                                Добивить правило <PlusOutlined/>
+                            </Button>}
+                        </Space>
+                        <Button
+                            danger
+                            type={'primary'}
+                            loading={deleteLoading}
+                            onClick={onDeleteStrategy}
+                        >Удалить</Button>
+                    </Space>
                 </Form.Item>
             </Form>
         </div>
@@ -201,7 +277,6 @@ interface IntervalProps {
 const Interval: React.FC<IntervalProps> = ({ id, settings, onRemove, minFrom, setIntervalValues, areFieldsDisabled }) => {
     const [ratioMode, setRatioMode] = React.useState(!!settings?.ratio);
     const [toCurrent, setToCurrent] = React.useState(minFrom + 500);
-    
 
     return (
         <Form.Item key={id} className="inline-flex" wrapperCol={{ offset: 2 }}>

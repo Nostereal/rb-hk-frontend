@@ -7,23 +7,29 @@ import {
     InputNumber,
     Slider,
     DatePicker,
-    Select,
+    Select, notification, Space,
 } from 'antd';
 import { block } from 'bem-cn';
 import * as React from 'react';
 import './AggregateStrategyCreateForm.scss';
-import { AggregateStrategy, IntervalSettings, StrategyType, TimeUnit } from '../../models/strategy';
+import { AggregateStrategy, InstantStrategy, IntervalSettings, StrategyType, TimeUnit } from '../../models/strategy';
 import Title from 'antd/lib/typography/Title';
-import { createStrategy } from '../../api/routes';
+import { createStrategy, deleteStrategy, updateStrategy } from '../../api/routes';
 import { useHistory } from 'react-router';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Mode } from '../../constants/strategies-descriptions';
+import moment from 'moment';
 
 const b = block('AggregateStrategyCreateForm');
 
+interface AggregateStrategyWithMeta extends AggregateStrategy {
+    uuid?: string
+    title?: string
+}
 interface FormProps {
     mode: Mode
-    strategy?: AggregateStrategy
+    strategy?: AggregateStrategyWithMeta
+    onModeChanged?: React.Dispatch<React.SetStateAction<Mode>>
 }
 
 interface AmountInterval extends IntervalSettings {
@@ -32,44 +38,74 @@ interface AmountInterval extends IntervalSettings {
 
 let id = 0;
 
-const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) => {
+const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy, onModeChanged }) => {
     const history = useHistory();
+    let deleteClicks = 0;
 
     const onFinish = async (values: any) => {
-        try {
-            await createStrategy({
-                type: StrategyType.AGGREGATE_DATE,
-                title: values.title,
-                settings: {
-                    intervals: intervals.map(i => ({ ...i, key: undefined })),
-                    mcc_list: mccList.map(i => +i), // cast string to number
-                    max_bonus: values.max,
-                    min_bonus: values.min,
-                    aggregate_time_settings: {
-                        to_time: values.toTime,
-                        from_time: values.fromTime,
-                        time_unit: values.timeUnit,
-                        quantity: values.quantity,
+        if (mode === Mode.VIEW) {
+
+        }
+        if (mode === Mode.VIEW) {
+            onModeChanged!!(Mode.EDIT);
+            return;
+        } else if (mode === Mode.EDIT) {
+            try {
+                await updateStrategy({
+                    uuid: strategy!!.uuid,
+                    type: StrategyType.AGGREGATE_DATE,
+                    title: values.title,
+                    settings: {
+                        intervals: intervals.map(i => ({ ...i, key: undefined })),
+                        mcc_list: mccList.map(i => +i), // cast string to number
+                        max_bonus: values.max,
+                        min_bonus: values.min,
+                        aggregate_time_settings: {
+                            to_time: values.toTime,
+                            from_time: values.fromTime,
+                            time_unit: values.timeUnit,
+                            quantity: values.quantity,
+                        },
                     },
-                },
-            });
-            history.push('/strategies/create/success');
-        } catch (error) {
-            console.log(error);
-            history.push('/strategies/create/error');
+                });
+                history.push('/strategies/create/success');
+            } catch (error) {
+                history.push('/strategies/create/error');
+            }
+        } else if (mode === Mode.CREATE) {
+            try {
+                await createStrategy({
+                    type: StrategyType.AGGREGATE_DATE,
+                    title: values.title,
+                    settings: {
+                        intervals: intervals.map(i => ({ ...i, key: undefined })),
+                        mcc_list: mccList.map(i => +i), // cast string to number
+                        max_bonus: values.max,
+                        min_bonus: values.min,
+                        aggregate_time_settings: {
+                            to_time: values.toTime,
+                            from_time: values.fromTime,
+                            time_unit: values.timeUnit,
+                            quantity: values.quantity,
+                        },
+                    },
+                });
+                history.push('/strategies/create/success');
+            } catch (error) {
+                history.push('/strategies/create/error');
+            }
         }
     };
 
+    const [form] = Form.useForm();
     const [mccList, setMccList] = React.useState<string[]>(strategy ? strategy.mcc_list.map(i => i.toString()) : []);
     const [intervals, setIntervals] = React.useState<AmountInterval[]>(
         strategy
             ? strategy.intervals.map((item, i) => ({ key: i, ...item }))
             : [{ key: 0 }]
     );
-    const [areFieldsDisabled, setFieldsDisabled] = React.useState<boolean>(mode === Mode.VIEW);
-    const [form] = Form.useForm();
-
-    React.useEffect(() => setFieldsDisabled(mode === Mode.VIEW), [mode]);
+    const [deleteLoading, setDeleteLoading] = React.useState<boolean>(false)
+    const areFieldsDisabled = mode === Mode.VIEW
 
     const formItemLayout = {
         labelCol: {
@@ -98,7 +134,7 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) =>
         return (
             <>
                 {!areFieldsDisabled &&
-                <Form.Item name="mcc" rules={[{ pattern: /\d{4}/g, message: 'MCC код — это 4 цифры' }]}>
+                <Form.Item name="mcc" rules={[{ pattern: /\d{4}/, message: 'MCC код — это 4 цифры' }]}>
                     <Input
                         addonAfter={
                             <PlusOutlined onClick={addMcc} style={{ cursor: 'pointer' }}/>
@@ -108,7 +144,11 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) =>
                     />
                 </Form.Item>}
                 {mccList.map(item => (
-                    <Tag key={item} closable={!areFieldsDisabled} onClose={() => handleClose(item)}>
+                    <Tag key={item}
+                         closable={!areFieldsDisabled}
+                         onClose={() => handleClose(item)}
+                         style={{ fontSize: 14, paddingTop: 2, paddingBottom: 2 }}
+                    >
                         {item}
                     </Tag>
                 ))}
@@ -155,16 +195,60 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) =>
         setIntervals(prev => [...prev, { from: prevInterval.to, key: ++id }]);
     };
 
+    const onDeleteStrategy = () => {
+        deleteClicks++
+        setDeleteLoading(true)
+        if (deleteClicks === 1) {
+            setTimeout(() => {
+                notification.error({
+                    message: 'Что-то пошло не так',
+                    description: React.createElement('img', {
+                        src: 'https://memepedia.ru/wp-content/uploads/2017/04/%D0%B5%D0%B1%D0%B0%D1%82%D1%8C-%D1%82%D1%8B-%D0%BB%D0%BE%D1%85-%D0%BE%D1%80%D0%B8%D0%B3%D0%B8%D0%BD%D0%B0%D0%BB.jpg',
+                        alt: 'Ты даже удалить не можешь, ничтожество',
+                        width: 280,
+                        height: 170,
+                    })
+                })
+                setDeleteLoading(false)
+            }, 700)
+        } else {
+            deleteStrategy(strategy!!.uuid!!)
+                .then(() => history.push('/strategies'))
+                .catch(() => {
+                    notification.error({
+                        message: 'Упсс...',
+                        description: 'Ты даже удалить не можешь, ничтожество',
+                    })
+                })
+                .finally(() => setDeleteLoading(false))
+        }
+    }
+
     return (
         <div className={b()}>
-            <Form {...formItemLayout} name='create_aggregate' onFinish={onFinish}>
-                <Form.Item wrapperCol={{ offset: 2 }} label={'MCC'}>
+            <Form
+                {...formItemLayout}
+                name='create_aggregate'
+                onFinish={onFinish}
+                initialValues={
+                    {
+                        title: strategy?.title,
+                        fromTime: strategy?.aggregate_time_settings?.from_time ? moment(strategy.aggregate_time_settings.from_time) : undefined,
+                        toTime: strategy?.aggregate_time_settings?.to_time ? moment(strategy.aggregate_time_settings.to_time) : undefined,
+                        timeUnit: strategy?.aggregate_time_settings?.time_unit,
+                        quantity: strategy?.aggregate_time_settings?.quantity,
+                        from: strategy?.min_bonus,
+                        to: strategy?.max_bonus,
+                    }
+                }
+            >
+                <Form.Item label={'MCC'}>
                     {renderMCC()}
                 </Form.Item>
-                <Form.Item wrapperCol={{ offset: 1 }}>
+                <Form.Item label={'Начать с'} required={!areFieldsDisabled}>
                     <div className="inline-flex">
-                        <Form.Item label={'Начать с'} required={!areFieldsDisabled}>
-                            <DatePicker name='fromTime' disabled={areFieldsDisabled}/>
+                        <Form.Item name='fromTime'>
+                            <DatePicker disabled={areFieldsDisabled}/>
                         </Form.Item>
                         <Form.Item name='toTime' label={'Закончить'}>
                             <DatePicker disabled={areFieldsDisabled}/>
@@ -187,7 +271,7 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) =>
                     </div>
                 </Form.Item>
                 {!areFieldsDisabled && <Form.Item name='title' required label="Название">
-                    <Input disabled={areFieldsDisabled} placeholder={'Daily Ashan strategy'}/>
+                    <Input placeholder={'Daily Ashan strategy'}/>
                 </Form.Item>}
                 <Form.Item label={'Лимит'}>
                     <div className="inline-flex">
@@ -205,12 +289,24 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy }) =>
                 </Form.Item>
                 {intervalsList}
                 <Form.Item wrapperCol={{ offset: 2 }}>
-                    <Button style={{ marginRight: 30 }} htmlType={'submit'} type="primary">
-                        {areFieldsDisabled ? 'Редактировать' : 'Создать' /* when areFieldsDisabled is true – u r in VIEW mode, else – in EDIT mode */}
-                    </Button>
-                    {!areFieldsDisabled && <Button onClick={addInterval} type="dashed">
-                        Добивить правило <PlusOutlined/>
-                    </Button>}
+                    <Space size={'large'}>
+                        <Space size={'small'}>
+                            <Button htmlType='submit' type="primary">
+                                {mode === Mode.VIEW && 'Редактировать'}
+                                {mode === Mode.EDIT && 'Сохранить'}
+                                {mode === Mode.CREATE && 'Создать'}
+                            </Button>
+                            {!areFieldsDisabled && <Button onClick={addInterval} type="dashed">
+                                Добивить правило <PlusOutlined/>
+                            </Button>}
+                        </Space>
+                        <Button
+                            danger
+                            type={'primary'}
+                            loading={deleteLoading}
+                            onClick={onDeleteStrategy}
+                        >Удалить</Button>
+                    </Space>
                 </Form.Item>
             </Form>
         </div>

@@ -18,5 +18,6 @@ export const AGGREGATE_STRATEGY_DESCRIPTION: string =
 
 export enum Mode {
     VIEW,
-    EDIT
+    EDIT,
+    CREATE,
 }

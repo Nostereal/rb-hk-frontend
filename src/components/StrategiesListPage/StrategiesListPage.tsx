@@ -65,12 +65,11 @@ const StrategiesListPage: React.FC = () => {
                         loading={loading}
                         columns={columns}
                         dataSource={dataSource}
-                    ></Table>
+                    />
                 </div>
             </div>
         </div>
     );
 };
 
-// onRowClick={({ uuid }) => history.push(`/strategies/${uuid}`)/*alert(JSON.stringify(json, null, 4))*/}
 export default StrategiesListPage;

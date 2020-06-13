@@ -7,6 +7,7 @@ import AggregateStrategiesCreateForm from '../StrategiesCreateForm/AggregateStra
 import './StrategiesCreatePage.scss';
 import { INSTANT_STRATEGY_DESCRIPTION, AGGREGATE_STRATEGY_DESCRIPTION, Mode } from '../../constants/strategies-descriptions';
 import InstantStrategyCreateForm from '../StrategiesCreateForm/InstantStrategyCreateForm';
+import { useCallback } from 'react';
 
 const b = block('StrategiesCreatePage');
 
@@ -34,10 +35,10 @@ const StrategiesCreatePage: React.FC = () => {
 
                 <Switch>
                     <Route exact path='/strategies/create/instant'>
-                        <InstantStrategyCreateForm mode={Mode.EDIT} />
+                        <InstantStrategyCreateForm mode={Mode.CREATE} />
                     </Route>
                     <Route exact path='/strategies/create/schedule'>
-                        <AggregateStrategiesCreateForm mode={Mode.EDIT} />
+                        <AggregateStrategiesCreateForm mode={Mode.CREATE} />
                     </Route>
                     <Redirect to={'/'} />
                 </Switch>

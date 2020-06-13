@@ -18,6 +18,14 @@ export const createStrategy = async (strategyCreation: Strategy) =>
         settings: JSON.stringify(strategyCreation.settings),
     });
 
+export const updateStrategy = async (strategyParams: Strategy) =>
+    request.put('/strategies', {
+        ...strategyParams,
+        settings: JSON.stringify(strategyParams.settings),
+    });
+
+export const deleteStrategy = async (uuid: string) => request.put(`/strategies/${uuid}/delete`);
+
 export const fetchStrategy = async (id: string) => 
     request.get<Strategy>(`/strategies/${id}`).then(({ data }) => {
         return {

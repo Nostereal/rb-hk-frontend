@@ -6,12 +6,14 @@ import { Table, Tag, Button } from 'antd';
 import { ColumnProps } from 'antd/lib/table';
 import { fetchTariffs } from '../../api/routes';
 import { BuildOutlined } from '@ant-design/icons';
+import { useHistory } from 'react-router-dom';
 
 const b = block('TariffsPage');
 
 const TariffsPage: React.FC = () => {
     const [tariffsList, setTariffsList] = React.useState<TariffPlan[]>([]);
     const [loading, setLoading] = React.useState(true);
+    const history = useHistory()
 
     React.useEffect(() => {
         setLoading(true);
@@ -21,7 +23,7 @@ const TariffsPage: React.FC = () => {
     }, []);
 
     const dataSource = tariffsList.map(item => ({
-        key: item.title,
+        key: item.uuid,
         ...item,
     }));
 
@@ -33,7 +35,7 @@ const TariffsPage: React.FC = () => {
         {
             title: 'Стратегии',
             render: (_, { strategies }) =>
-                strategies && strategies.slice(0, 20).map(s => <Tag>{s.title}</Tag>),
+                strategies && strategies.slice(0, 20).map(s => <Tag key={s.uuid} onClick={() => history.push(`/strategies/${s.uuid}`)}>{s.title}</Tag>),
         },
     ];
     return (
@@ -46,7 +48,7 @@ const TariffsPage: React.FC = () => {
                     </Button>
                 </div>
                 <div style={{ marginTop: 30 }}>
-                    <Table loading={loading} columns={columns} dataSource={dataSource}></Table>
+                    <Table loading={loading} columns={columns} dataSource={dataSource}/>
                 </div>
             </div>
         </div>

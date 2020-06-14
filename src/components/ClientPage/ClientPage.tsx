@@ -111,7 +111,7 @@ const ClientPage: React.FC = () => {
         },
         {
             title: 'Стратегия вычисления',
-            render: (_, { strategy }) => strategy.title,
+            render: (_, { strategy }) => strategy?.title ? strategy.title : 'Удалена :(',
         },
         {
             title: 'Дата начисления',

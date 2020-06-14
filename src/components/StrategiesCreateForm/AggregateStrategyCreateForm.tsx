@@ -68,9 +68,18 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy, onMo
                         },
                     },
                 });
-                history.push('/strategies/create/success');
+                notification.success({
+                    message: 'Бездельник!',
+                    description: 'Стратегию-то я создал, но этот сервис никому не нужен, займись уже чем-нибудь полезным...',
+                    duration: 7,
+                })
+                history.push('/strategies');
             } catch (error) {
-                history.push('/strategies/create/error');
+                notification.error({
+                    message: 'Говно, а не сервис',
+                    description: 'Мы не смогли сохранить ваши изменения, попробуйте ещё разок',
+                    duration: 6,
+                })
             }
         } else if (mode === Mode.CREATE) {
             try {
@@ -90,9 +99,18 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy, onMo
                         },
                     },
                 });
-                history.push('/strategies/create/success');
+                notification.success({
+                    message: 'Бездельник!',
+                    description: 'Стратегию-то я создал, но этот сервис никому не нужен, займись уже чем-нибудь полезным...',
+                    duration: 7,
+                })
+                history.push('/strategies');
             } catch (error) {
-                history.push('/strategies/create/error');
+                notification.error({
+                    message: 'Говно, а не сервис',
+                    description: 'Мы не смогли создать эту стратегию, попробуйте ещё разок',
+                    duration: 6,
+                })
             }
         }
     };
@@ -127,14 +145,14 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy, onMo
         if (mccList.includes(mcc)) return
 
         form.resetFields(['mcc']);
-        if (/\d{4}/.test(mcc)) setMccList(prev => [...prev, mcc]);
+        if (/^\d{4}$/.test(mcc)) setMccList(prev => [...prev, mcc]);
     };
 
     const renderMCC = () => {
         return (
             <>
                 {!areFieldsDisabled &&
-                <Form.Item name="mcc" rules={[{ pattern: /\d{4}/, message: 'MCC код — это 4 цифры' }]}>
+                <Form.Item name="mcc" rules={[{ pattern: /^\d{4}$/, message: 'MCC код — это 4 цифры' }]}>
                     <Input
                         addonAfter={
                             <PlusOutlined onClick={addMcc} style={{ cursor: 'pointer' }}/>
@@ -213,11 +231,18 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy, onMo
             }, 700)
         } else {
             deleteStrategy(strategy!!.uuid!!)
-                .then(() => history.push('/strategies'))
+                .then(() => {
+                    notification.success({
+                        message: 'Ну и правильно',
+                        description: 'Такая себе стратегия была, если честно...',
+                    })
+                    history.push('/strategies')
+                })
                 .catch(() => {
                     notification.error({
                         message: 'Упсс...',
                         description: 'Ты даже удалить не можешь, ничтожество',
+                        duration: 4,
                     })
                 })
                 .finally(() => setDeleteLoading(false))
@@ -302,7 +327,6 @@ const AggregateStrategyCreateForm: React.FC<FormProps> = ({ mode, strategy, onMo
                         </Space>
                         <Button
                             danger
-                            type={'primary'}
                             loading={deleteLoading}
                             onClick={onDeleteStrategy}
                         >Удалить</Button>

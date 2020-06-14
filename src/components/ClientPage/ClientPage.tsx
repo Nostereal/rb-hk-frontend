@@ -35,8 +35,10 @@ const ClientPage: React.FC = () => {
 
     React.useEffect(() => void preFetchData(), [id]);
     React.useEffect(() => {
-        if (newTariff) {
+        if (newTariff?.uuid !== client?.tariffPlan.uuid) {
             setShowSaveTariffButton(true);
+        } else {
+            setShowSaveTariffButton(false);
         }
     }, [newTariff]);
 
@@ -52,8 +54,8 @@ const ClientPage: React.FC = () => {
         }
     };
     const fetchClientInfo = async () => {
-        const res = await fetchClientBonuses(id);
-        setBonuses(res);
+        const res = await fetchClient(id);
+        setClient(res);
     };
     const fetchTariffsList = async () => {
         const res = await fetchTariffs();
@@ -61,8 +63,8 @@ const ClientPage: React.FC = () => {
     };
 
     const fetchBonuses = async () => {
-        const res = await fetchClient(id);
-        setClient(res);
+        const res = await fetchClientBonuses(id);
+        setBonuses(res);
     };
 
     const preFetchData = async () => {
@@ -80,7 +82,7 @@ const ClientPage: React.FC = () => {
     }
 
     const bonusesDataSource = bonuses.map(item => ({
-        key: item.id,
+        key: item.uuid,
         ...item,
     }));
 
@@ -141,6 +143,7 @@ const ClientPage: React.FC = () => {
                 <div className="">
                     <Select
                         showSearch
+                        defaultValue={client.tariffPlan.title}
                         style={{ minWidth: 320, marginTop: 50, marginRight: 40 }}
                         placeholder="Выбрать тариф"
                         optionFilterProp="children"

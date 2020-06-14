@@ -27,7 +27,7 @@ const StrategyPage: React.FC = () => {
         fetchStrategy(id)
             .then(setStrategy)
             .then(() => setLoading(false));
-    }, []);
+    }, [id]);
 
 
     if (!id || typeof id !== 'string') {

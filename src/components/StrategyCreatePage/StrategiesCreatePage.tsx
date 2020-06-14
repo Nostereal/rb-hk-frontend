@@ -7,7 +7,6 @@ import AggregateStrategiesCreateForm from '../StrategiesCreateForm/AggregateStra
 import './StrategiesCreatePage.scss';
 import { INSTANT_STRATEGY_DESCRIPTION, AGGREGATE_STRATEGY_DESCRIPTION, Mode } from '../../constants/strategies-descriptions';
 import InstantStrategyCreateForm from '../StrategiesCreateForm/InstantStrategyCreateForm';
-import { useCallback } from 'react';
 
 const b = block('StrategiesCreatePage');
 

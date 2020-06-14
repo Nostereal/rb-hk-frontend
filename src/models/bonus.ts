@@ -2,7 +2,7 @@ import { Transaction } from './transaction';
 import { Strategy } from './strategy';
 
 export interface Bonus {
-    id: string;
+    uuid: string;
     amount: number;
     createTime: string;
     transactions: Transaction[];
